@@ -1,0 +1,1146 @@
+{
+	"info": {
+		"_postman_id": "abeb852d-5779-452b-8a6b-34980fe6a535",
+		"name": "KTPay",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "11911570"
+	},
+	"item": [
+		{
+			"name": "Payment",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const crypto = require('crypto-js');\r",
+							"const uuid = require('uuid');\r",
+							"const $ = JSON.parse(pm.request.body);\r",
+							"\r",
+							"pm.environment.set('MERCHANT_ORDER_ID', \"KTPay-Postman-\" + uuid.v4());\r",
+							"\r",
+							"var hashPassword = hashPassword(pm.environment.get('PASSWORD'));\r",
+							"var hashStr = pm.environment.get('MERCHANT_NUMBER') + pm.environment.get('MERCHANT_ORDER_ID') + $.amount + $.successUrl + $.failUrl + pm.environment.get('USERNAME') + hashPassword;\r",
+							"var hashData = computeHash(hashStr, hashPassword);\r",
+							"\r",
+							"pm.environment.set('HASH_DATA', hashData);\r",
+							"\r",
+							"function hashPassword(password) {\r",
+							"    const hash = crypto.SHA1(password).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}\r",
+							"\r",
+							"function computeHash(data, key) {\r",
+							"    const hash = crypto.HmacSHA512(data, key).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const METHOD = \"Payment\";\r",
+							"\r",
+							"pm.test(`${METHOD} - Status code: 200`, function () {\r",
+							"    \r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Content-Type header is text/html`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.include('text/html');\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Response time is less than 1000ms`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"paymentType\": 1,\r\n  \"language\": 1,\r\n  \"merchantOrderId\": \"{{MERCHANT_ORDER_ID}}\",\r\n  \"successUrl\": \"http://localhost:3000/KTPay/Success\",\r\n  \"failUrl\": \"http://localhost:3000/KTPay/Fail\",\r\n  \"merchantId\": \"{{MERCHANT_NUMBER}}\",\r\n  \"customerId\": \"{{CUSTOMER_NUMBER}}\",\r\n  \"username\": \"{{USERNAME}}\",\r\n  \"hashData\": \"{{HASH_DATA}}\",\r\n  \"amount\": \"100\",\r\n  \"currency\": \"0949\",\r\n  \"installmentCount\": 1,\r\n  \"customer\": {\r\n    \"fullName\": \"JOHN DOE\",\r\n    \"phoneNumber\": {\r\n      \"cc\": \"90\",\r\n      \"subscriber\": \"5001112233\"\r\n    },\r\n    \"email\": \"noreply@kuveytturk.com.tr\",\r\n    \"identityNumber\": \"12345678901\",\r\n    \"ipAddress\": \"127.0.0.1\"\r\n  },\r\n  \"card\": {\r\n    \"cardNumber\": \"5188961939192544\",\r\n    \"cardHolderName\": \"JOHN DOE\",\r\n    \"expireMonth\": \"06\",\r\n    \"expireYear\": \"25\",\r\n    \"securityCode\": \"929\"\r\n  },\r\n  \"invoiceAddress\": {\r\n    \"fullName\": null,\r\n    \"company\": \"XXX LTD.STI.\",\r\n    \"identityNumber\": null,\r\n    \"taxNumber\": \"111111111\",\r\n    \"taxOffice\": \"XXXXXXXXX\",\r\n    \"address\": \"ADDRESS\",\r\n    \"zipCode\": \"123456\",\r\n    \"city\": \"IZMIT\",\r\n    \"state\": \"41\",\r\n    \"country\": \"792\"\r\n  },\r\n  \"shippingAddress\": {\r\n    \"fullName\": \"JOHN DOE\",\r\n    \"address\": \"ADDRESS\",\r\n    \"zipCode\": \"123456\",\r\n    \"city\": \"IZMIT\",\r\n    \"state\": \"41\",\r\n    \"country\": \"792\"\r\n  },\r\n  \"cart\": [\r\n    {\r\n      \"cartItemName\": \"Product PHYSICAL\",\r\n      \"cartItemUrl\": \"https://www.kuveytturk.com.tr\",\r\n      \"cartItemType\": 0,\r\n      \"quantity\": 1.5,\r\n      \"price\": \"10\",\r\n      \"totalAmount\": \"15\"\r\n    },\r\n    {\r\n      \"cartItemName\": \"Product VIRTUAL\",\r\n      \"cartItemUrl\": \"https://www.kuveytturk.com.tr\",\r\n      \"cartItemType\": 1,\r\n      \"quantity\": 1,\r\n      \"price\": \"85\",\r\n      \"totalAmount\": \"85\"\r\n    }\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/KTPay/Payment",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"KTPay",
+						"Payment"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PaymentInstallment",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const crypto = require('crypto-js');\r",
+							"const uuid = require('uuid');\r",
+							"const $ = JSON.parse(pm.request.body);\r",
+							"\r",
+							"pm.environment.set('MERCHANT_ORDER_ID', \"KTPay-Postman-\" + uuid.v4());\r",
+							"\r",
+							"var hashPassword = hashPassword(pm.environment.get('PASSWORD'));\r",
+							"var hashStr = pm.environment.get('MERCHANT_NUMBER') + pm.environment.get('MERCHANT_ORDER_ID') + $.amount + $.successUrl + $.failUrl + pm.environment.get('USERNAME') + hashPassword;\r",
+							"var hashData = computeHash(hashStr, hashPassword);\r",
+							"\r",
+							"pm.environment.set('HASH_DATA', hashData);\r",
+							"\r",
+							"function hashPassword(password) {\r",
+							"    const hash = crypto.SHA1(password).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}\r",
+							"\r",
+							"function computeHash(data, key) {\r",
+							"    const hash = crypto.HmacSHA512(data, key).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const METHOD = \"PaymentInstallment\";\r",
+							"\r",
+							"pm.test(`${METHOD} - Status code: 200`, function () {\r",
+							"    \r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Content-Type header is text/html`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.include('text/html');\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Response time is less than 1000ms`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"paymentType\": 1,\r\n  \"language\": 1,\r\n  \"merchantOrderId\": \"{{MERCHANT_ORDER_ID}}\",\r\n  \"successUrl\": \"http://localhost:3000/KTPay/Success\",\r\n  \"failUrl\": \"http://localhost:3000/KTPay/Fail\",\r\n  \"merchantId\": \"{{MERCHANT_NUMBER}}\",\r\n  \"customerId\": \"{{CUSTOMER_NUMBER}}\",\r\n  \"username\": \"{{USERNAME}}\",\r\n  \"hashData\": \"{{HASH_DATA}}\",\r\n  \"amount\": \"100\",\r\n  \"currency\": \"0949\",\r\n  \"installmentCount\": 2,\r\n  \"customer\": {\r\n    \"fullName\": \"JOHN DOE\",\r\n    \"phoneNumber\": {\r\n      \"cc\": \"90\",\r\n      \"subscriber\": \"5001112233\"\r\n    },\r\n    \"email\": \"noreply@kuveytturk.com.tr\",\r\n    \"identityNumber\": \"12345678901\",\r\n    \"ipAddress\": \"127.0.0.1\"\r\n  },\r\n  \"card\": {\r\n    \"cardNumber\": \"4446763125813623\",\r\n    \"cardHolderName\": \"JOHN DOE\",\r\n    \"expireMonth\": \"12\",\r\n    \"expireYear\": \"26\",\r\n    \"securityCode\": \"000\"\r\n  },\r\n  \"invoiceAddress\": {\r\n    \"fullName\": null,\r\n    \"company\": \"XXX LTD.STI.\",\r\n    \"identityNumber\": null,\r\n    \"taxNumber\": \"111111111\",\r\n    \"taxOffice\": \"XXXXXXXXX\",\r\n    \"address\": \"ADDRESS\",\r\n    \"zipCode\": \"123456\",\r\n    \"city\": \"IZMIT\",\r\n    \"state\": \"41\",\r\n    \"country\": \"792\"\r\n  },\r\n  \"shippingAddress\": {\r\n    \"fullName\": \"JOHN DOE\",\r\n    \"address\": \"ADDRESS\",\r\n    \"zipCode\": \"123456\",\r\n    \"city\": \"IZMIT\",\r\n    \"state\": \"41\",\r\n    \"country\": \"792\"\r\n  },\r\n  \"cart\": [\r\n    {\r\n      \"cartItemName\": \"Product PHYSICAL\",\r\n      \"cartItemUrl\": \"https://www.kuveytturk.com.tr\",\r\n      \"cartItemType\": 0,\r\n      \"quantity\": 1.5,\r\n      \"price\": \"10\",\r\n      \"totalAmount\": \"15\"\r\n    },\r\n    {\r\n      \"cartItemName\": \"Product VIRTUAL\",\r\n      \"cartItemUrl\": \"https://www.kuveytturk.com.tr\",\r\n      \"cartItemType\": 1,\r\n      \"quantity\": 1,\r\n      \"price\": \"85\",\r\n      \"totalAmount\": \"85\"\r\n    }\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/KTPay/Payment",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"KTPay",
+						"Payment"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Provision",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const crypto = require('crypto-js');\r",
+							"const $ = JSON.parse(pm.request.body);\r",
+							"\r",
+							"var hashPassword = hashPassword(pm.environment.get('PASSWORD'));\r",
+							"var hashStr = pm.environment.get('MERCHANT_NUMBER') + pm.environment.get('MERCHANT_ORDER_ID') + $.amount + pm.environment.get('USERNAME') + hashPassword;\r",
+							"var hashData = computeHash(hashStr, hashPassword);\r",
+							"\r",
+							"pm.environment.set('HASH_DATA', hashData);\r",
+							"\r",
+							"function hashPassword(password) {\r",
+							"    const hash = crypto.SHA1(password).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}\r",
+							"\r",
+							"function computeHash(data, key) {\r",
+							"    const hash = crypto.HmacSHA512(data, key).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const METHOD = \"Provision\";\r",
+							"const $ = pm.response.json();\r",
+							"\r",
+							"pm.test(`${METHOD} - Status code: 200`, function () {\r",
+							"    \r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Content-Type header is application/json`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Response time is less than 1000ms`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - The transaction completed successfully`, () => {\r",
+							"  \r",
+							"  pm.expect($.Success).to.eql(true);\r",
+							"  pm.expect($.ResponseCode).to.eql(\"00\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"language\": 1,\r\n  \"merchantId\": \"{{MERCHANT_NUMBER}}\",\r\n  \"customerId\": \"{{CUSTOMER_NUMBER}}\",\r\n  \"username\": \"{{USERNAME}}\",\r\n  \"hashData\": \"{{HASH_DATA}}\",\r\n  \"orderId\": 203418448,\r\n  \"merchantOrderId\": \"KTPay-Postman-83118151-2cc1-45da-b547-ef22f72377ca\",\r\n  \"amount\": \"100\",\r\n  \"md\": \"lqr0hel5kOP6o/qw2acJ1HwL1+Sre0IGyv9G/00OwPqbXzl5NzS9HBeXMzDxkJ8z\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/KTPay/Provision",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"KTPay",
+						"Provision"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SaleReversal - Cancel",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const crypto = require('crypto-js');\r",
+							"const $ = JSON.parse(pm.request.body);\r",
+							"\r",
+							"var hashPassword = hashPassword(pm.environment.get('PASSWORD'));\r",
+							"var hashStr = pm.environment.get('MERCHANT_NUMBER') + pm.environment.get('MERCHANT_ORDER_ID') + $.amount + pm.environment.get('USERNAME') + hashPassword;\r",
+							"var hashData = computeHash(hashStr, hashPassword);\r",
+							"\r",
+							"pm.environment.set('HASH_DATA', hashData);\r",
+							"\r",
+							"function hashPassword(password) {\r",
+							"    const hash = crypto.SHA1(password).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}\r",
+							"\r",
+							"function computeHash(data, key) {\r",
+							"    const hash = crypto.HmacSHA512(data, key).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const METHOD = \"SaleReversal - Cancel\";\r",
+							"const $ = pm.response.json();\r",
+							"\r",
+							"pm.test(`${METHOD} - Status code: 200`, function () {\r",
+							"    \r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Content-Type header is application/json`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Response time is less than 1000ms`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - The transaction completed successfully`, () => {\r",
+							"  \r",
+							"  pm.expect($.Success).to.eql(true);\r",
+							"  pm.expect($.ResponseCode).to.eql(\"00\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"language\": 1,\r\n  \"saleReversalType\": 3,\r\n  \"merchantId\": \"{{MERCHANT_NUMBER}}\",\r\n  \"customerId\": \"{{CUSTOMER_NUMBER}}\",\r\n  \"username\": \"{{USERNAME}}\",\r\n  \"hashData\": \"{{HASH_DATA}}\",\r\n  \"orderId\": 203418448,\r\n  \"merchantOrderId\": \"KTPay-Postman-83118151-2cc1-45da-b547-ef22f72377ca\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/KTPay/SaleReversal",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"KTPay",
+						"SaleReversal"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SaleReversal - Refund",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const crypto = require('crypto-js');\r",
+							"const $ = JSON.parse(pm.request.body);\r",
+							"\r",
+							"var hashPassword = hashPassword(pm.environment.get('PASSWORD'));\r",
+							"var hashStr = pm.environment.get('MERCHANT_NUMBER') + pm.environment.get('MERCHANT_ORDER_ID') + $.amount + pm.environment.get('USERNAME') + hashPassword;\r",
+							"var hashData = computeHash(hashStr, hashPassword);\r",
+							"\r",
+							"pm.environment.set('HASH_DATA', hashData);\r",
+							"\r",
+							"function hashPassword(password) {\r",
+							"    const hash = crypto.SHA1(password).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}\r",
+							"\r",
+							"function computeHash(data, key) {\r",
+							"    const hash = crypto.HmacSHA512(data, key).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const METHOD = \"SaleReversal - Refund\";\r",
+							"const $ = pm.response.json();\r",
+							"\r",
+							"pm.test(`${METHOD} - Status code: 200`, function () {\r",
+							"    \r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Content-Type header is application/json`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Response time is less than 1000ms`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - The transaction completed successfully`, () => {\r",
+							"  \r",
+							"  pm.expect($.Success).to.eql(true);\r",
+							"  pm.expect($.ResponseCode).to.eql(\"00\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"language\": 1,\r\n  \"saleReversalType\": 1,\r\n  \"merchantId\": \"{{MERCHANT_NUMBER}}\",\r\n  \"customerId\": \"{{CUSTOMER_NUMBER}}\",\r\n  \"username\": \"{{USERNAME}}\",\r\n  \"hashData\": \"{{HASH_DATA}}\",\r\n  \"orderId\": 203418448,\r\n  \"merchantOrderId\": \"KTPay-Postman-83118151-2cc1-45da-b547-ef22f72377ca\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/KTPay/SaleReversal",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"KTPay",
+						"SaleReversal"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SaleReversal - PartialRefund",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const crypto = require('crypto-js');\r",
+							"const $ = JSON.parse(pm.request.body);\r",
+							"\r",
+							"var hashPassword = hashPassword(pm.environment.get('PASSWORD'));\r",
+							"var hashStr = pm.environment.get('MERCHANT_NUMBER') + pm.environment.get('MERCHANT_ORDER_ID') + $.amount + pm.environment.get('USERNAME') + hashPassword;\r",
+							"var hashData = computeHash(hashStr, hashPassword);\r",
+							"\r",
+							"pm.environment.set('HASH_DATA', hashData);\r",
+							"\r",
+							"function hashPassword(password) {\r",
+							"    const hash = crypto.SHA1(password).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}\r",
+							"\r",
+							"function computeHash(data, key) {\r",
+							"    const hash = crypto.HmacSHA512(data, key).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const METHOD = \"SaleReversal - PartialRefund\";\r",
+							"const $ = pm.response.json();\r",
+							"\r",
+							"pm.test(`${METHOD} - Status code: 200`, function () {\r",
+							"    \r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Content-Type header is application/json`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Response time is less than 1000ms`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - The transaction completed successfully`, () => {\r",
+							"  \r",
+							"  pm.expect($.Success).to.eql(true);\r",
+							"  pm.expect($.ResponseCode).to.eql(\"00\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"language\": 1,\r\n  \"saleReversalType\": 2,\r\n  \"merchantId\": \"{{MERCHANT_NUMBER}}\",\r\n  \"customerId\": \"{{CUSTOMER_NUMBER}}\",\r\n  \"username\": \"{{USERNAME}}\",\r\n  \"hashData\": \"{{HASH_DATA}}\",\r\n  \"orderId\": 203418448,\r\n  \"merchantOrderId\": \"KTPay-Postman-83118151-2cc1-45da-b547-ef22f72377ca\",\r\n  \"amount\": 50\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/KTPay/SaleReversal",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"KTPay",
+						"SaleReversal"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Find Transaction",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const crypto = require('crypto-js');\r",
+							"const $ = JSON.parse(pm.request.body);\r",
+							"\r",
+							"var hashPassword = hashPassword(pm.environment.get('PASSWORD'));\r",
+							"var hashStr = pm.environment.get('MERCHANT_NUMBER') + pm.environment.get('USERNAME') + hashPassword;\r",
+							"var hashData = computeHash(hashStr, hashPassword);\r",
+							"\r",
+							"pm.environment.set('HASH_DATA', hashData);\r",
+							"\r",
+							"function hashPassword(password) {\r",
+							"    const hash = crypto.SHA1(password).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}\r",
+							"\r",
+							"function computeHash(data, key) {\r",
+							"    const hash = crypto.HmacSHA512(data, key).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const METHOD = \"GetTransaction\";\r",
+							"const $ = pm.response.json();\r",
+							"\r",
+							"pm.test(`${METHOD} - Status code: 200`, function () {\r",
+							"    \r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Content-Type header is application/json`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Response time is less than 1000ms`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - The transaction completed successfully`, () => {\r",
+							"  \r",
+							"  pm.expect($.Success).to.eql(true);\r",
+							"  pm.expect($.ResponseCode).to.eql(\"Successfull\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"language\": 1,\r\n  \"merchantId\": \"{{MERCHANT_NUMBER}}\",\r\n  \"customerId\": \"{{CUSTOMER_NUMBER}}\",\r\n  \"username\": \"{{USERNAME}}\",\r\n  \"hashData\": \"{{HASH_DATA}}\",\r\n  \"orderId\": 203418448\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/KTPay/GetTransaction",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"KTPay",
+						"GetTransaction"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List Transactions",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const crypto = require('crypto-js');\r",
+							"const $ = JSON.parse(pm.request.body);\r",
+							"\r",
+							"var hashPassword = hashPassword(pm.environment.get('PASSWORD'));\r",
+							"var hashStr = pm.environment.get('MERCHANT_NUMBER') + pm.environment.get('MERCHANT_ORDER_ID') + pm.environment.get('USERNAME') + hashPassword;\r",
+							"var hashData = computeHash(hashStr, hashPassword);\r",
+							"\r",
+							"pm.environment.set('HASH_DATA', hashData);\r",
+							"\r",
+							"function hashPassword(password) {\r",
+							"    const hash = crypto.SHA1(password).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}\r",
+							"\r",
+							"function computeHash(data, key) {\r",
+							"    const hash = crypto.HmacSHA512(data, key).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const METHOD = \"GetTransactions\";\r",
+							"const $ = pm.response.json();\r",
+							"\r",
+							"pm.test(`${METHOD} - Status code: 200`, function () {\r",
+							"    \r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Content-Type header is application/json`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Response time is less than 1000ms`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - The transaction completed successfully`, () => {\r",
+							"  \r",
+							"  pm.expect($.Success).to.eql(true);\r",
+							"  pm.expect($.ResponseCode).to.eql(\"Successfull\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"language\": 1,\r\n  \"merchantId\": \"{{MERCHANT_NUMBER}}\",\r\n  \"customerId\": \"{{CUSTOMER_NUMBER}}\",\r\n  \"username\": \"{{USERNAME}}\",\r\n  \"hashData\": \"{{HASH_DATA}}\",\r\n  \"orderId\": 203418448,\r\n  \"merchantOrderId\": \"{{MERCHANT_ORDER_ID}}\",\r\n  \"startDate\": \"2024-01-01 00:00:00\",\r\n  \"endDate\": \"2024-12-31 00:00:00\",\r\n  \"orderStatus\": 6,\r\n  \"batchId\": 548\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/KTPay/GetTransactions",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"KTPay",
+						"GetTransactions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List Transactions by OrderId",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const crypto = require('crypto-js');\r",
+							"const $ = JSON.parse(pm.request.body);\r",
+							"\r",
+							"var hashPassword = hashPassword(pm.environment.get('PASSWORD'));\r",
+							"var hashStr = pm.environment.get('MERCHANT_NUMBER') + pm.environment.get('USERNAME') + hashPassword;\r",
+							"var hashData = computeHash(hashStr, hashPassword);\r",
+							"\r",
+							"pm.environment.set('HASH_DATA', hashData);\r",
+							"\r",
+							"function hashPassword(password) {\r",
+							"    const hash = crypto.SHA1(password).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}\r",
+							"\r",
+							"function computeHash(data, key) {\r",
+							"    const hash = crypto.HmacSHA512(data, key).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const METHOD = \"GetTransactionsByOrderId\";\r",
+							"const $ = pm.response.json();\r",
+							"\r",
+							"pm.test(`${METHOD} - Status code: 200`, function () {\r",
+							"    \r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Content-Type header is application/json`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Response time is less than 1000ms`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - The transaction completed successfully`, () => {\r",
+							"  \r",
+							"  pm.expect($.Success).to.eql(true);\r",
+							"  pm.expect($.ResponseCode).to.eql(\"Successfull\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"language\": 1,\r\n  \"merchantId\": \"{{MERCHANT_NUMBER}}\",\r\n  \"customerId\": \"{{CUSTOMER_NUMBER}}\",\r\n  \"username\": \"{{USERNAME}}\",\r\n  \"hashData\": \"{{HASH_DATA}}\",\r\n  \"orderId\": 203418448\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/KTPay/GetTransactions",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"KTPay",
+						"GetTransactions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List Transactions by MerchantOrderId",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const crypto = require('crypto-js');\r",
+							"const $ = JSON.parse(pm.request.body);\r",
+							"\r",
+							"var hashPassword = hashPassword(pm.environment.get('PASSWORD'));\r",
+							"var hashStr = pm.environment.get('MERCHANT_NUMBER') + pm.environment.get('MERCHANT_ORDER_ID') + pm.environment.get('USERNAME') + hashPassword;\r",
+							"var hashData = computeHash(hashStr, hashPassword);\r",
+							"\r",
+							"pm.environment.set('HASH_DATA', hashData);\r",
+							"\r",
+							"function hashPassword(password) {\r",
+							"    const hash = crypto.SHA1(password).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}\r",
+							"\r",
+							"function computeHash(data, key) {\r",
+							"    const hash = crypto.HmacSHA512(data, key).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const METHOD = \"GetTransactionsByMerchantOrderId\";\r",
+							"const $ = pm.response.json();\r",
+							"\r",
+							"pm.test(`${METHOD} - Status code: 200`, function () {\r",
+							"    \r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Content-Type header is application/json`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Response time is less than 1000ms`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - The transaction completed successfully`, () => {\r",
+							"  \r",
+							"  pm.expect($.Success).to.eql(true);\r",
+							"  pm.expect($.ResponseCode).to.eql(\"Successfull\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"language\": 1,\r\n  \"merchantId\": \"{{MERCHANT_NUMBER}}\",\r\n  \"customerId\": \"{{CUSTOMER_NUMBER}}\",\r\n  \"username\": \"{{USERNAME}}\",\r\n  \"hashData\": \"{{HASH_DATA}}\",\r\n  \"merchantOrderId\": \"{{MERCHANT_ORDER_ID}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/KTPay/GetTransactions",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"KTPay",
+						"GetTransactions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List Transactions by OrderStatus",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const crypto = require('crypto-js');\r",
+							"const $ = JSON.parse(pm.request.body);\r",
+							"\r",
+							"var hashPassword = hashPassword(pm.environment.get('PASSWORD'));\r",
+							"var hashStr = pm.environment.get('MERCHANT_NUMBER') + pm.environment.get('USERNAME') + hashPassword;\r",
+							"var hashData = computeHash(hashStr, hashPassword);\r",
+							"\r",
+							"pm.environment.set('HASH_DATA', hashData);\r",
+							"\r",
+							"function hashPassword(password) {\r",
+							"    const hash = crypto.SHA1(password).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}\r",
+							"\r",
+							"function computeHash(data, key) {\r",
+							"    const hash = crypto.HmacSHA512(data, key).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const METHOD = \"GetTransactionsByOrderStatus\";\r",
+							"const $ = pm.response.json();\r",
+							"\r",
+							"pm.test(`${METHOD} - Status code: 200`, function () {\r",
+							"    \r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Content-Type header is application/json`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Response time is less than 1000ms`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - The transaction completed successfully`, () => {\r",
+							"  \r",
+							"  pm.expect($.Success).to.eql(true);\r",
+							"  pm.expect($.ResponseCode).to.eql(\"Successfull\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"language\": 1,\r\n  \"merchantId\": \"{{MERCHANT_NUMBER}}\",\r\n  \"customerId\": \"{{CUSTOMER_NUMBER}}\",\r\n  \"username\": \"{{USERNAME}}\",\r\n  \"hashData\": \"{{HASH_DATA}}\",\r\n  \"orderStatus\": 1\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/KTPay/GetTransactions",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"KTPay",
+						"GetTransactions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List Transactions by BatchId",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const crypto = require('crypto-js');\r",
+							"const $ = JSON.parse(pm.request.body);\r",
+							"\r",
+							"var hashPassword = hashPassword(pm.environment.get('PASSWORD'));\r",
+							"var hashStr = pm.environment.get('MERCHANT_NUMBER') + pm.environment.get('USERNAME') + hashPassword;\r",
+							"var hashData = computeHash(hashStr, hashPassword);\r",
+							"\r",
+							"pm.environment.set('HASH_DATA', hashData);\r",
+							"\r",
+							"function hashPassword(password) {\r",
+							"    const hash = crypto.SHA1(password).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}\r",
+							"\r",
+							"function computeHash(data, key) {\r",
+							"    const hash = crypto.HmacSHA512(data, key).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const METHOD = \"GetTransactionsByBatchId\";\r",
+							"const $ = pm.response.json();\r",
+							"\r",
+							"pm.test(`${METHOD} - Status code: 200`, function () {\r",
+							"    \r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Content-Type header is application/json`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Response time is less than 1000ms`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - The transaction completed successfully`, () => {\r",
+							"  \r",
+							"  pm.expect($.Success).to.eql(true);\r",
+							"  pm.expect($.ResponseCode).to.eql(\"Successfull\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"language\": 1,\r\n  \"merchantId\": \"{{MERCHANT_NUMBER}}\",\r\n  \"customerId\": \"{{CUSTOMER_NUMBER}}\",\r\n  \"username\": \"{{USERNAME}}\",\r\n  \"hashData\": \"{{HASH_DATA}}\",\r\n  \"batchId\": 548\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/KTPay/GetTransactions",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"KTPay",
+						"GetTransactions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List Transactions by DateRanges",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const crypto = require('crypto-js');\r",
+							"const $ = JSON.parse(pm.request.body);\r",
+							"\r",
+							"var hashPassword = hashPassword(pm.environment.get('PASSWORD'));\r",
+							"var hashStr = pm.environment.get('MERCHANT_NUMBER') + pm.environment.get('USERNAME') + hashPassword;\r",
+							"var hashData = computeHash(hashStr, hashPassword);\r",
+							"\r",
+							"pm.environment.set('HASH_DATA', hashData);\r",
+							"\r",
+							"function hashPassword(password) {\r",
+							"    const hash = crypto.SHA1(password).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}\r",
+							"\r",
+							"function computeHash(data, key) {\r",
+							"    const hash = crypto.HmacSHA512(data, key).toString(crypto.enc.Base64);\r",
+							"    return hash;\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const METHOD = \"GetTransactionsByDateRanges\";\r",
+							"const $ = pm.response.json();\r",
+							"\r",
+							"pm.test(`${METHOD} - Status code: 200`, function () {\r",
+							"    \r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Content-Type header is application/json`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - Response time is less than 1000ms`, () => {\r",
+							"  \r",
+							"  pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+							"});\r",
+							"\r",
+							"pm.test(`${METHOD} - The transaction completed successfully`, () => {\r",
+							"  \r",
+							"  pm.expect($.Success).to.eql(true);\r",
+							"  pm.expect($.ResponseCode).to.eql(\"Successfull\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"language\": 1,\r\n  \"merchantId\": \"{{MERCHANT_NUMBER}}\",\r\n  \"customerId\": \"{{CUSTOMER_NUMBER}}\",\r\n  \"username\": \"{{USERNAME}}\",\r\n  \"hashData\": \"{{HASH_DATA}}\",\r\n  \"startDate\": \"2024-01-01 00:00:00\",\r\n  \"endDate\": \"2024-12-31 00:00:00\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/KTPay/GetTransactions",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"KTPay",
+						"GetTransactions"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
